@@ -37,6 +37,7 @@ class zapbot:
     lista_enviados = []
     faltantes = []
     getReiniciou = 0
+    getTotalMensagens = 0
 
 
     def __init__(self):
@@ -75,84 +76,52 @@ class zapbot:
                 self.contato.click()
                 self.caixa_de_pesquisa.clear()
                 time.sleep(1)
-            except Exception as e:
-                zapbot.reinicia()
+            except:
+                Exception
 
 
-    def get10MsgPrimeiraVez(self):
-        id_msg = self.driver.find_elements_by_css_selector("div[class*='_2hqOq']")
-        x = 1
-        try:
-            for i in id_msg:
-                if i is None:
-                    break
-                else:
-                    try:
-                        ultimo_id_msg = id_msg[len(id_msg)-x].get_attribute("data-id")
-                        self.lista_enviados.append(ultimo_id_msg)
-                    except:
-                        pass
-                x=x+1
-        except:
-            raise
-        for i in self.lista_enviados:
-            if i is None:
-                self.lista_enviados.remove(i)
-            elif 'grouped-sticker' in i:
-                self.lista_enviados.remove(i)
-            elif 'album' in i:
-                self.lista_enviados.remove(i)
-        for i in self.lista_enviados:
-            if i is None:
-                self.lista_enviados.remove(i)
-             
-        self.abrir_menu()
-        time.sleep(2)
-        print(self.lista_enviados[-1])
-        self.seleciona_mensagem(self.lista_enviados[0])
-        
-        self.encaminha_mensagem()
-
-
-    def seleciona_mensagem(self, id):
-        choices = self.driver.find_elements_by_xpath("//div[contains(@data-id,'{}')]/span/div/div".format(id))
-        #print(f'Choices[0]: {choices[0]}')
-        time.sleep(0.5)
-        try:
-            choices[0].click()
-        except:
-            self.reinicia()
-        self.lista_enviados.append(id)
+    def seleciona_mensagem(self, faltantes):
+        self.getTotalMensagens = self.getTotalMensagens + 1
+        for i in self.faltantes:
+            choices = self.driver.find_elements_by_xpath("//div[contains(@data-id,'{}')]/span/div/div".format(i))
+            #print(f'Choices[0]: {choices[0]}')
+            time.sleep(0.2)
+            try:
+                choices[0].click()
+                self.lista_enviados.append(i)
+            except:
+                Exception
         
 
     def verifica_mensagens(self):
         if len(self.lista_enviados) > 35:
             while len(self.lista_enviados) > 35:
                 self.lista_enviados.pop(0)
-        x = 1
         self._id = []
-        self.id_msg = None
+        self.id_msg = []
         id_msg = self.driver.find_elements_by_css_selector("div[class*='_2hqOq']")
-        try:
-            for i in id_msg:
-                if i is None:
-                    break
-                else:
-                    ultimo_id_msg = id_msg[len(id_msg)-x].get_attribute("data-id")
-                    self._id.append(ultimo_id_msg)
+        x = 1
+        for i in id_msg:
+            try:
+                ultimo_id_msg = id_msg[x].get_attribute("data-id")
+                self._id.append(ultimo_id_msg)
                 x=x+1
-        except Exception:
-            #self.reinicia()
-            print(Exception.__getattribute__)
+            except:
+                Exception
         for i in self._id:
             if i is None:
-                break
+                self._id.remove(i)
             elif 'grouped-sticker' in i:
                 self._id.remove(i)
             elif 'album' in i:
                 self._id.remove(i)
+            else:
+                pass
+        for i in self._id:
+            if i in self.lista_enviados:
+                self._id.remove(i)
         self.ultimos_5 = []
-        self.ultimos_5 = list(set(self._id))
+        self.ultimos_5 = self._id
         self.ultimos_5.reverse()
         self.ultimos_5 = self.ultimos_5[:5]
         #print(f'ultimos 5: {self.ultimos_5}')
@@ -162,31 +131,29 @@ class zapbot:
 
     def encaminhando(self, ultimos_5):
         ##self.ids_chaves = self.lista_enviados[]
+        self.faltantes = []
         for i in self.ultimos_5:
-            if i in self.lista_enviados:
-                pass
-            elif i not in self.faltantes:
+            if i not in self.lista_enviados:
                 self.faltantes.append(i)
         #print(f'Lista_enviados: {self.lista_enviados}')
         print(f'Faltantes: {self.faltantes}')
         print(f'Bot já reiniciou: {self.getReiniciou}')
-        if not self.faltantes:
-            #se for vazio
-            print(f'self.faltantes está vazio')
-            pass
-        else:
-            self.abrir_menu()
-            for i in self.faltantes:
-                self.seleciona_mensagem(i)
-                self.faltantes.remove(i)
-            self.encaminha_mensagem()
+        print(f'Foram enviadas: {self.getTotalMensagens} mensagens')
+        if self.faltantes:
+            if None in self.faltantes:
+                self.faltantes.remove(None)
+            else:
+                self.abrir_menu()
+                self.seleciona_mensagem(self.faltantes)
+                self.encaminha_mensagem()
 
 
     def encaminha_mensagem(self):
         try:
             self.driver.find_element_by_css_selector("span[data-icon='forward']").click()
         except:
-            zapbot.reinicia()
+            Exception
+            #zapbot.reinicia()
         time.sleep(1)
         #para quem vai a mensagem
         self.driver.find_elements_by_css_selector("div[contenteditable='true']")[0].send_keys(self.contato_destino)
@@ -209,100 +176,23 @@ class zapbot:
 
     def abrir_menu(self):
         menu = self.driver.find_elements_by_css_selector("span[data-icon='menu']")
-        menu[1].click()
+        try:
+            menu[1].click()
+        except:
+            Exception
         time.sleep(0.4)
         try:
             selecionar_msg = self.driver.find_elements_by_css_selector("li[data-animate-dropdown-item='true']")
             selecionar_msg[1].click()
             time.sleep(1)
         except:
-            self.abrir_menu()
-
-
-    @classmethod
-    def repassar_msg(self):
-        id_msg = self.driver.find_elements_by_css_selector("div[class*='_2hqOq']")
-        
-        try:
-            ultima_id_msg = id_msg[len(id_msg) - 1].get_attribute("data-id")
-        except:
-            zapbot.reinicia()
-
-        while self.ultimamsg_looping != ultima_id_msg:
-            id_msg = self.driver.find_elements_by_css_selector("div[class*='_2hqOq']")
-            try:
-                ultima_id_msg = id_msg[len(id_msg) - 1].get_attribute("data-id")
-            except:
-                zapbot.reinicia()
-            if ultima_id_msg != self.ultimamsg_id:
-                time.sleep(1)
-                self.abrir_menu()
-                x = 1
-                for c in range(len(id_msg)):
-                    if self.ultimamsg_id != "":
-                        try:
-                            while id_msg[len(id_msg) - x].get_attribute("data-id") != self.ultimamsg_id:
-                                try:
-                                    if id_msg[len(id_msg) - x].get_attribute("data-id").startswith("album"):
-                                        break
-                                    elif id_msg[len(id_msg) - x].get_attribute("data-id").startswith("grouped-sticker"):
-                                        break
-                                    else:
-                                        botao_pra_enviar = self.driver.find_elements_by_class_name("_2XWkx")
-                                        botao_pra_enviar[len(botao_pra_enviar) - x].click()
-                                        x += 1
-                                except:
-                                    break
-                                
-                                
-                                self.ultimamsg_looping = id_msg[len(id_msg) - 1].get_attribute("data-id")
-                        except:
-                            pass
-                    else:
-                        botao_pra_enviar = self.driver.find_elements_by_class_name("_2XWkx")
-                        botao_pra_enviar[len(botao_pra_enviar) - 1].click()
-                        self.ultimamsg_looping = id_msg[len(id_msg) - 1].get_attribute("data-id")
-                        break
-                time.sleep(1)
-                print(self.ultimamsg_looping,ultima_id_msg)
-                if self.ultimamsg_looping != ultima_id_msg:
-                    self.driver.find_element_by_css_selector("span[data-icon='x']").click()
-                    print('entrou nesse if estranho na linha 156')
-                    bot.repassar_msg()
-                try:
-                    self.driver.find_element_by_css_selector("span[data-icon='forward']").click()
-                except:
-                    zapbot.reinicia()
-
-                time.sleep(1)
-                self.driver.find_elements_by_css_selector("div[contenteditable='true']")[0].send_keys(self.contato_destino)# para quem vai a mensagem
-                time.sleep(1)
-                self.driver.find_element_by_class_name(self.class_contato_destino).click() #_3ko75 _5h6Y_ _3Whw5
-                self.driver.find_element_by_css_selector("span[data-icon='send']").click()
-                self.ultimamsg_id = ultima_id_msg
-                """ Abre a conversa com um contato especifico """
-                time.sleep(0.5)
-                try:
-                    # Seleciona a caixa de pesquisa de conversa
-                    self.caixa_de_pesquisa = self.driver.find_element_by_css_selector(self.class_caixa_de_pesquisa)
-                    # Digita o nome ou numero do contato
-                    self.caixa_de_pesquisa.send_keys(self.contato_origem)
-                    sleep(1)
-                    # Seleciona o contato
-                    self.contato = self.driver.find_element_by_xpath(self.xpath_contato_origem)
-
-                    # Entra na conversa
-                    self.contato.click()
-                    self.caixa_de_pesquisa.clear()
-                except Exception as e:
-                    zapbot.reinicia()
+            Exception
 
 
 if __name__ == '__main__':
     bot = zapbot()  # Inicia o objeto zapbot
     bot.abre_conversa(bot.contato_origem)  # Passando o numero ou o nome do contato
-    bot.get10MsgPrimeiraVez() #pega os 10 primeiros
-    # primeiro ciclo concluído
+ 
     while True:
         bot.verifica_mensagens()
         time.sleep(0.5)

@@ -11,10 +11,11 @@ from webdriver_manager.chrome import ChromeDriverManager
 
 class zapbot:
     #variaveis de funcionamento
-    contato_origem = 'PanelaTI'
+    contato_origem = 'grupo que envia a msg'
     contato_destino = 'grupo que envia a msg'
     class_caixa_de_pesquisa = '.\_3FRCZ'
-    xpath_contato_origem = '//*[@id="pane-side"]/div[1]/div/div/div[5]/div/div/div[2]/div[1]'
+    nome_contato_origem = 'grupo que envia a msg'
+    xpath_contato_origem = f'//*[@id="pane-side"]/div//span[.="{nome_contato_origem}"]'
     class_contato_destino = '_3ko75'
 
     # O local de execução do nosso script
@@ -69,6 +70,7 @@ class zapbot:
             time.sleep(1)
         except:
             try:
+                self.caixa_de_pesquisa.clear()
                 self.caixa_de_pesquisa = self.driver.find_element_by_css_selector(".\_3FRCZ")
                 self.caixa_de_pesquisa.send_keys(contato)
                 sleep(2)
@@ -85,7 +87,7 @@ class zapbot:
         for i in self.faltantes:
             choices = self.driver.find_elements_by_xpath("//div[contains(@data-id,'{}')]/span/div/div".format(i))
             #print(f'Choices[0]: {choices[0]}')
-            time.sleep(0.2)
+            time.sleep(0.4)
             try:
                 choices[0].click()
                 self.lista_enviados.append(i)
@@ -159,7 +161,10 @@ class zapbot:
         self.driver.find_elements_by_css_selector("div[contenteditable='true']")[0].send_keys(self.contato_destino)
         time.sleep(1)
         self.driver.find_element_by_class_name(self.class_contato_destino).click() #_3ko75 _5h6Y_ _3Whw5
-        self.driver.find_element_by_css_selector("span[data-icon='send']").click()
+        try:
+            self.driver.find_element_by_css_selector("span[data-icon='send']").click()
+        except:
+            self.reinicia()
         time.sleep(0.5)
         self.abre_conversa(self.contato_origem)
     
@@ -167,8 +172,8 @@ class zapbot:
     def reinicia(self):
         self.getReiniciou = self.getReiniciou + 1
         self.driver.refresh()
-        bot.abre_conversa(self.contato_origem)  # Passando o numero ou o nome do contato
-        bot.get10MsgPrimeiraVez()
+        #Passando o numero ou o nome do contato
+        bot.abre_conversa(self.contato_origem)  
         while True:
             bot.verifica_mensagens()
             time.sleep(0.5)
@@ -191,8 +196,9 @@ class zapbot:
 
 if __name__ == '__main__':
     bot = zapbot()  # Inicia o objeto zapbot
-    bot.abre_conversa(bot.contato_origem)  # Passando o numero ou o nome do contato
- 
+    # Passando o numero ou o nome do contato
+    bot.abre_conversa(bot.contato_origem)  
+    
     while True:
         bot.verifica_mensagens()
         time.sleep(0.5)
